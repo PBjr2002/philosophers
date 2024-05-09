@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/30 16:29:52 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/03 19:15:27 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:49:01 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ void	philo_init(t_table *table)
 	while (n < table->philo_nb)
 	{
 		table->philo[n].seat = n;
+		table->philo[n].full = 0;
 		table->philo[n].eat_counter = table->eat_counter;
 		table->philo[n].hp = table->start + table->rip_timer;
 		table->philo[n].sleep = table->sleep_timer;
@@ -77,16 +78,24 @@ t_table	*table_init(int ac, char **av)
 	return (table);
 }
 
-/* void	mutex_cleaner(t_table *table)
+void	mutex_cleaner(t_table *table)
 {
 	int	n;
 
 	n = 0;
-	free(table->philo);
-	
+	while (n < table->philo_nb)
+	{
+		if (pthread_mutex_lock(&table->philo[n].philo_lock) == -1)
+			pthread_mutex_unlock(&table->philo[n].philo_lock);
+		n++;
+	}
+	if (pthread_mutex_lock(&table->lock) == -1)
+		pthread_mutex_unlock(&table->lock);
+	if (pthread_mutex_lock(&table->write) == -1)
+		pthread_mutex_unlock(&table->write);
 }
 
-void	cleaner(t_table *table)
+/* void	cleaner(t_table *table)
 {
 	int	n;
 

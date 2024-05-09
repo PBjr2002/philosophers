@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/30 14:56:21 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/03 20:32:38 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:17:43 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,8 @@ long	ft_latoi(char *str)
 		number = number * 10 + (str[n] - 48);
 		n++;
 	}
+	if ((str[n] < '0' || str[n] > '9') && str[n] != '\0')
+		return (-1);
 	return (number * signal);
 }
 
@@ -65,18 +67,17 @@ void	print_msg(t_philo *philo, char *msg)
 	pthread_mutex_unlock(&philo->table->write);
 }
 
-void	upgraded_sleep(t_table *table, long timer)
+void	upgraded_sleep(t_philo *philo, long timer)
 {
 	while (get_ms() < timer)
 	{
-		pthread_mutex_lock(&table->lock);
-		if (table->go_exit == 1)
+		pthread_mutex_lock(&philo->table->lock);
+		if (philo->table->go_exit == 1)
 		{
-			pthread_mutex_unlock(&table->lock);
-			pthread_mutex_unlock(&table->philo->philo_lock);
+			pthread_mutex_unlock(&philo->table->lock);
 			return ;
 		}
-		pthread_mutex_unlock(&table->lock);
+		pthread_mutex_unlock(&philo->table->lock);
 		usleep(250);
 	}
 }

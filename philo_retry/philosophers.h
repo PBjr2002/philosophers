@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 16:34:25 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/03 15:09:35 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:15:01 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 typedef struct s_philo
 {
 	int				seat;
+	int				full;
 	int				eat_counter;
 	long			hp;
 	long			sleep;
@@ -58,12 +59,13 @@ void	wait_for_turn(t_philo *philo);
 void	mutex_init(t_table *table);
 void	philo_init(t_table *table);
 t_table	*table_init(int ac, char **av);
+void	mutex_cleaner(t_table *table);
 
 //utils.c
 long	get_ms(void);
 long	ft_latoi(char *str);
 void	print_msg(t_philo *philo, char *msg);
-void	upgraded_sleep(t_table *table, long timer);
+void	upgraded_sleep(t_philo *philo, long timer);
 
 //actions.c
 void	take_forks(t_philo *philo);

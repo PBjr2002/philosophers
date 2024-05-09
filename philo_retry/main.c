@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/22 15:25:33 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/03 20:33:35 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:16:04 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,6 @@ void	*routine(void *p)
 		printf("%ld %i %s\n", get_ms() - philo->table->start,
 			philo->seat + 1, "has taken a fork");
 		pthread_mutex_unlock(&philo->table->fork[0]);
-		printf("%ld %i %s\n", get_ms() - philo->table->start,
-			philo->seat + 1, "died");
 		return (NULL);
 	}
 	wait_for_turn(philo);
@@ -47,7 +45,7 @@ void	glockinator(t_table *table)
 			table->go_exit = 1;
 			return ;
 		}
-		else if (time > table->philo[n].hp)
+		else if (time > table->philo[n].hp && table->philo[n].full == 0)
 			break ;
 		pthread_mutex_unlock(&table->philo[n].philo_lock);
 		n++;
@@ -55,7 +53,10 @@ void	glockinator(t_table *table)
 			n = 0;
 	}
 	pthread_mutex_unlock(&table->philo[n].philo_lock);
-	print_msg(table->philo, "died");
+	pthread_mutex_lock(&table->write);
+	time = get_ms() - table->start;
+	printf("%ld %i %s\n", time, n + 1, "died");
+	pthread_mutex_unlock(&table->write);
 	pthread_mutex_lock(&table->lock);
 	table->go_exit = 1;
 	pthread_mutex_unlock(&table->lock);
@@ -65,7 +66,7 @@ void	wait_for_turn(t_philo *philo)
 {
 	if (philo->table->philo_nb % 2 != 0
 		&& philo->seat == philo->table->philo_nb - 1)
-		upgraded_sleep(philo->table, get_ms() + (philo->chewing + 5));
+		upgraded_sleep(philo, get_ms() + (philo->chewing + 5));
 }
 
 int	main(int ac, char **av)
@@ -92,6 +93,7 @@ int	main(int ac, char **av)
 		pthread_join(table->philo[n].id, NULL);
 		n++;
 	}
-	pthread_mutex_unlock(&table->lock);
+	mutex_cleaner(table);
+	//pthread_mutex_unlock(&table->lock);
 	return (0);
 }

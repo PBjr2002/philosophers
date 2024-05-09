@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 12:22:46 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/03 20:34:09 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/09 19:15:51 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,8 +67,11 @@ void	eating_time(t_philo *philo)
 		return ;
 	}
 	pthread_mutex_unlock(&philo->table->lock);
-	if (philo->eat_counter == 0)
+	if (philo->eat_counter == 0 && philo->full == 0)
+	{
+		philo->full = 1;
 		philo->table->full_philos++;
+	}
 	take_forks(philo);
 	pthread_mutex_lock(&philo->philo_lock);
 	time = get_ms();
@@ -81,9 +84,10 @@ void	eating_time(t_philo *philo)
 	}
 	pthread_mutex_unlock(&philo->philo_lock);
 	print_msg(philo, "is eating");
-	philo->eat_counter--;
+	if (philo->full == 0)
+		philo->eat_counter--;
 	pthread_mutex_lock(&philo->philo_lock);
-	upgraded_sleep(philo->table, get_ms() + philo->chewing);
+	upgraded_sleep(philo, get_ms() + philo->chewing);
 	pthread_mutex_unlock(&philo->philo_lock);
 	leave_forks(philo);
 	sleeping_time(philo);
@@ -100,7 +104,7 @@ void	sleeping_time(t_philo *philo)
 	pthread_mutex_unlock(&philo->table->lock);
 	print_msg(philo, "is sleeping");
 	pthread_mutex_lock(&philo->philo_lock);
-	upgraded_sleep(philo->table, get_ms() + philo->sleep);
+	upgraded_sleep(philo, get_ms() + philo->sleep);
 	pthread_mutex_unlock(&philo->philo_lock);
 	thinking_time(philo);
 }
@@ -120,7 +124,7 @@ void	thinking_time(t_philo *philo)
 	else
 		philo->think = ((philo->chewing * 2) - philo->sleep) * 0.42;
 	pthread_mutex_lock(&philo->philo_lock);
-	upgraded_sleep(philo->table, get_ms() + philo->think);
+	upgraded_sleep(philo, get_ms() + philo->think);
 	pthread_mutex_unlock(&philo->philo_lock);
 	eating_time(philo);
 }
