@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/22 15:25:33 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/09 19:16:04 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/21 17:20:19 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,12 @@ void	*routine(void *p)
 	philo = (t_philo *)p;
 	if (philo->table->philo_nb == 1)
 	{
+		pthread_mutex_lock(&philo->philo_lock);
 		pthread_mutex_lock(&philo->table->fork[0]);
 		printf("%ld %i %s\n", get_ms() - philo->table->start,
 			philo->seat + 1, "has taken a fork");
 		pthread_mutex_unlock(&philo->table->fork[0]);
+		pthread_mutex_unlock(&philo->philo_lock);
 		return (NULL);
 	}
 	wait_for_turn(philo);
@@ -32,20 +34,13 @@ void	*routine(void *p)
 
 void	glockinator(t_table *table)
 {
-	long	time;
 	int		n;
 
 	n = 0;
 	while (1)
 	{
 		pthread_mutex_lock(&table->philo[n].philo_lock);
-		time = get_ms();
-		if (table->full_philos == table->philo_nb)
-		{
-			table->go_exit = 1;
-			return ;
-		}
-		else if (time > table->philo[n].hp && table->philo[n].full == 0)
+		if (get_ms() > table->philo[n].hp && table->philo[n].full == 0)
 			break ;
 		pthread_mutex_unlock(&table->philo[n].philo_lock);
 		n++;
@@ -53,20 +48,31 @@ void	glockinator(t_table *table)
 			n = 0;
 	}
 	pthread_mutex_unlock(&table->philo[n].philo_lock);
+	self_destruct(table, n);
+}
+
+void	self_destruct(t_table *table, int n)
+{
 	pthread_mutex_lock(&table->write);
-	time = get_ms() - table->start;
-	printf("%ld %i %s\n", time, n + 1, "died");
+	printf("%ld %i %s\n", get_ms() - table->start, n + 1, "died");
+	n = 0;
+	while (n < table->philo_nb)
+	{
+		pthread_mutex_lock(&table->philo[n].philo_lock);
+		table->philo[n].go_exit = 1;
+		pthread_mutex_unlock(&table->philo[n].philo_lock);
+		n++;
+	}
 	pthread_mutex_unlock(&table->write);
-	pthread_mutex_lock(&table->lock);
-	table->go_exit = 1;
-	pthread_mutex_unlock(&table->lock);
 }
 
 void	wait_for_turn(t_philo *philo)
 {
-	if (philo->table->philo_nb % 2 != 0
-		&& philo->seat == philo->table->philo_nb - 1)
-		upgraded_sleep(philo, get_ms() + (philo->chewing + 5));
+	if (philo->seat % 2 != 0)
+			upgraded_sleep(philo, get_ms() + philo->chewing);
+	else if (philo->seat == philo->table->philo_nb - 1
+			&& philo->table->philo_nb % 2 != 0)
+			upgraded_sleep(philo, get_ms() + (philo->chewing + 5));
 }
 
 int	main(int ac, char **av)
@@ -74,6 +80,8 @@ int	main(int ac, char **av)
 	t_table	*table;
 	int		n;
 
+	if (ac < 5 || ac > 6)
+		return (0);
 	table = table_init(ac, av);
 	if (!table)
 	{
@@ -87,13 +95,6 @@ int	main(int ac, char **av)
 		n++;
 	}
 	glockinator(table);
-	n = 0;
-	while (n < table->philo_nb)
-	{
-		pthread_join(table->philo[n].id, NULL);
-		n++;
-	}
-	mutex_cleaner(table);
-	//pthread_mutex_unlock(&table->lock);
+	cleaner(table);
 	return (0);
 }

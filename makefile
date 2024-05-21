@@ -1,8 +1,8 @@
 CC = cc
-CFLAGS = -g -Wall -Wextra -Werror
+CFLAGS = -g -pthread -Wall -Wextra -Werror
 NAME = philo
 
-SOURCES = main.c actions.c utils.c
+SOURCES = main.c actions.c utils.c init.c
 
 OBJS_DIR = obj
 OBJECTS = $(addprefix $(OBJS_DIR)/, $(SOURCES:%.c=%.o))
@@ -21,6 +21,9 @@ clean:
 
 fclean: clean
 		rm -f $(NAME)
+
+sanitize: $(OBJECTS)
+		$(CC) $(CFLAGS) -fsanitize=thread $(OBJECTS) -o $(NAME)
 
 re: fclean all
 

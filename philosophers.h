@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 16:34:25 by pauberna          #+#    #+#             */
-/*   Updated: 2024/04/19 16:34:03 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/21 17:05:30 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,49 +20,61 @@
 # include <stdio.h>
 # include <sys/time.h>
 
-typedef struct	s_timeval
-{
-	time_t			sec;
-	suseconds_t		mil_sec;
-}				t_timeval;
-
-typedef	struct	s_philo
+typedef struct s_philo
 {
 	int				seat;
-	int				philo_nb;
-	long			start;
+	int				full;
+	int				go_exit;
+	int				eat_counter;
 	long			hp;
+	long			sleep;
+	long			think;
 	long			chewing;
-	long			sleep_t;
-	struct	s_info	*info;
-	t_timeval		*clock;
+	long			rip_timer;
+	struct s_table	*table;
 	pthread_t		id;
-	pthread_mutex_t	lock;
+	pthread_mutex_t	philo_lock;
 }				t_philo;
 
-typedef	struct	s_info
+typedef struct s_table
 {
-	int				eat_nb;
 	int				philo_nb;
 	long			start;
-	long			time_to_rip;
-	long			time_to_eat;
-	long			time_to_zzz;
+	long			rip_timer;
+	long			eat_timer;
+	long			sleep_timer;
+	long			eat_counter;
 	t_philo			*philo;
-	t_timeval		*clock;
 	pthread_mutex_t	lock;
+	pthread_mutex_t	write;
 	pthread_mutex_t	*fork;
-}				t_info;
+}				t_table;
 
-long	get_time(t_info *info);
-void	upgraded_sleep(t_info *info, long timer);
-void	thinking_time(t_philo *philo);
-void	sleeping_time(t_philo *philo);
-void	eating_time(t_philo *philo);
+//main.c
+void	*routine(void *p);
+void	glockinator(t_table *table);
+void	self_destruct(t_table *table, int n);
+void	wait_for_turn(t_philo *philo);
+
+//init.c
+int		latoi_init(t_table *table, char **av);
+void	cleaner(t_table *table);
+void	mutex_init(t_table *table);
+void	philo_init(t_table *table);
+t_table	*table_init(int ac, char **av);
+
+//utils.c
+long	get_ms(void);
+long	ft_latoi(char *str);
+void	eating_time_helper(t_philo *philo);
+void	print_msg(t_philo *philo, char *msg);
+void	upgraded_sleep(t_philo *philo, long timer);
+
+//actions.c
 void	take_forks(t_philo *philo);
 void	leave_forks(t_philo *philo);
-//unsigned long	get_time_philo(t_philo *philo);
-void	print_msg(t_philo *philo, char *msg);
-void	pthread_closer(t_info *info);
+void	eating_time(t_philo *philo);
+void	sleeping_time(t_philo *philo);
+void	thinking_time(t_philo *philo);
 
 #endif
