@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/23 12:22:46 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/21 17:05:46 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/23 11:17:35 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,9 +73,9 @@ void	eating_time(t_philo *philo)
 	print_msg(philo, "is eating");
 	upgraded_sleep(philo, get_ms() + philo->chewing);
 	leave_forks(philo);
-	if (philo->eat_counter == 0 && philo->full == 0)
+	if (philo->eat_counter == 0)
 	{
-		philo->full = 1;
+		eating_time_helper(philo);
 		return ;
 	}
 	sleeping_time(philo);

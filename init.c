@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/30 16:29:52 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/21 17:05:23 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/23 15:52:04 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,48 +25,65 @@ int	latoi_init(t_table *table, char **av)
 	return (0);
 }
 
-void	cleaner(t_table *table)
+void	cleaner(t_table *table, int n)
 {
-	int	n;
+	int	i;
 
-	n = 0;
-	while (n < table->philo_nb)
+	i = 0;
+	while (i < table->philo_nb && n >= 0)
 	{
-		pthread_mutex_destroy(&table->philo[n].philo_lock);
-		pthread_mutex_destroy(&table->fork[n]);
-		n++;
+		pthread_join(table->philo[n].id, NULL);
+		i++;
+		n--;
 	}
-	pthread_mutex_destroy(&table->lock);
-	pthread_mutex_destroy(&table->write);
+	i = 0;
+	while (i < table->philo_nb)
+	{
+		if (pthread_mutex_destroy(&table->fork[i]) != 0)
+			return ;
+		if (pthread_mutex_destroy(&table->philo[i].philo_lock) != 0)
+			return ;
+		i++;
+	}
+	if (pthread_mutex_destroy(&table->lock) != 0)
+		return ;
+	if (pthread_mutex_destroy(&table->write) != 0)
+		return ;
 	free(table->philo);
 	free(table->fork);
 	free(table);
 }
 
-void	mutex_init(t_table *table)
+int	mutex_init(t_table *table)
 {
 	int	n;
 
-	pthread_mutex_init(&table->lock, NULL);
-	pthread_mutex_init(&table->write, NULL);
+	if (pthread_mutex_init(&table->lock, NULL) != 0)
+		return (-1);
+	if (pthread_mutex_init(&table->write, NULL) != 0)
+		return (-1);
 	table->fork = malloc(sizeof(pthread_mutex_t) * table->philo_nb);
 	n = 0;
 	while (n < table->philo_nb)
 	{
-		pthread_mutex_init(&table->philo[n].philo_lock, NULL);
-		pthread_mutex_init(&table->fork[n], NULL);
+		if (pthread_mutex_init(&table->philo[n].philo_lock, NULL) != 0)
+			return (-1);
+		if (pthread_mutex_init(&table->fork[n], NULL) != 0)
+			return (-1);
 		n++;
 	}
+	return (0);
 }
 
-void	philo_init(t_table *table)
+int	philo_init(t_table *table)
 {
 	int	n;
 
 	table->philo = malloc(sizeof(t_philo) * table->philo_nb);
 	if (!table->philo)
-		return ;
-	mutex_init(table);
+		return (-1);
+	if (mutex_init(table) == -1)
+		return (-1);
 	n = 0;
 	while (n < table->philo_nb)
 	{
@@ -82,31 +99,28 @@ void	philo_init(t_table *table)
 		table->philo[n].table = table;
 		n++;
 	}
+	return (0);
 }
 
 t_table	*table_init(int ac, char **av)
 {
-	struct timeval	time;
 	t_table			*table;
 
 	table = malloc(sizeof(t_table));
 	if (!table)
 		return (NULL);
-	gettimeofday(&time, NULL);
-	table->start = (time.tv_sec * 1000) + (time.tv_usec / 1000);
 	if (latoi_init(table, av) == -1)
-	{
-		free(table);
-		return (NULL);
-	}
+		return (free(table), NULL);
 	if (ac == 6)
 	{
 		table->eat_counter = ft_latoi(av[5]);
 		if (table->eat_counter <= 0)
-			return (NULL);
+			return (free(table), NULL);
 	}
 	else
 		table->eat_counter = -1;
-	philo_init(table);
+	table->full_philo = 0;
+	if (philo_init(table) == -1)
+		return (free(table->philo), free(table), NULL);
 	return (table);
 }

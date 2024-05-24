@@ -6,7 +6,7 @@
 /*   By: pauberna <pauberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/26 16:34:25 by pauberna          #+#    #+#             */
-/*   Updated: 2024/05/21 17:05:30 by pauberna         ###   ########.fr       */
+/*   Updated: 2024/05/23 15:47:13 by pauberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ typedef struct s_philo
 typedef struct s_table
 {
 	int				philo_nb;
+	int				full_philo;
 	long			start;
 	long			rip_timer;
 	long			eat_timer;
@@ -57,10 +58,10 @@ void	self_destruct(t_table *table, int n);
 void	wait_for_turn(t_philo *philo);
 
 //init.c
+int		mutex_init(t_table *table);
+int		philo_init(t_table *table);
 int		latoi_init(t_table *table, char **av);
-void	cleaner(t_table *table);
-void	mutex_init(t_table *table);
-void	philo_init(t_table *table);
+void	cleaner(t_table *table, int n);
 t_table	*table_init(int ac, char **av);
 
 //utils.c

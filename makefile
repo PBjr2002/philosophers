@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = -g -pthread -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror
 NAME = philo
 
 SOURCES = main.c actions.c utils.c init.c
@@ -21,9 +21,6 @@ clean:
 
 fclean: clean
 		rm -f $(NAME)
-
-sanitize: $(OBJECTS)
-		$(CC) $(CFLAGS) -fsanitize=thread $(OBJECTS) -o $(NAME)
 
 re: fclean all
 
